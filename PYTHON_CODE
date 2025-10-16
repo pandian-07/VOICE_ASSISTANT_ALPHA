@@ -1,0 +1,208 @@
+import pyttsx3          
+import speech_recognition as sr
+import datetime
+import os
+import wikipedia
+import pywhatkit
+import pyautogui
+import time
+import psutil
+
+
+def speak(audio):
+    engine = pyttsx3.init('sapi5')
+    voices = engine.getProperty('voices')
+    for voice in voices:
+        if "Ravi" in voice.name:
+            engine.setProperty('voice', voice.id)
+            break
+
+    engine.setProperty('rate', 150)
+    engine.say(audio)
+    engine.runAndWait()
+
+def commands():
+    a=sr.Recognizer()
+    with sr.Microphone() as source:
+        print("Absorbing...") 
+        a.pause_threshold=1
+        a.adjust_for_ambient_noise(source, duration=1)
+        audio = a.listen(source)
+
+        try:
+            print("Wait For Few Moments BOSS...")
+            answer=a.recognize_google(audio, language='en-in')
+            print(f"Based on your input: {answer}\n")
+        except Exception as e:
+            print(e)
+            speak("Could you clarify that once more?")
+            answer="none"
+        return answer
+def greets():
+    hour=int(datetime.datetime.now().hour)
+    if hour>=0 and hour<12:
+        print("\U0001F305Good morning, Boss. Alpha is awake and ready to kickstart your day.")
+        speak("Good morning, Boss. Alpha is awake and ready to kickstart your day.")
+    elif hour>=12 and hour<16:
+        print("Good Afternoon Boss")
+        speak("Good Afternoon Boss")
+    elif hour>=16 and hour<=20:
+        print("\U0001F307Evening check-in complete. I’m awake and standing by, Boss.")
+        speak("“Evening check-in complete. I’m awake and standing by, Boss.")
+    else:
+        speak("\U0001F319Night mode activated. I’m awake, Boss — quiet but capable.")
+def alpha_exit():
+    print("ok boss. I'm right here whenever you need me.")
+    speak("ok boss. I'm right here whenever you need me.")
+
+def close_browser():
+    speak("Closing the browser, Boss...")
+    os.system("taskkill /f /im msedge.exe")
+
+def close_youtube():
+    speak("Closing YouTube, Boss...")
+    for proc in psutil.process_iter(['name', 'cmdline']):
+        if proc.info['name'] == "msedge.exe":
+            if any("youtube.com" in str(arg).lower() for arg in proc.info['cmdline']):
+                try:
+                    proc.kill()
+                    speak("YouTube tab has been closed, Boss.")
+                    return
+                except Exception as e:
+                    print(f"Error closing YouTube tab: {e}")
+                    speak("Couldn't close YouTube tab, Boss.")
+                    return
+    speak("No YouTube tab found running in Edge, Boss.")
+
+def system_status():
+    cpu = psutil.cpu_percent()
+    ram = psutil.virtual_memory().percent
+    battery = psutil.sensors_battery().percent
+    speak(f"CPU usage is {cpu}%, RAM usage is {ram}%, and battery is at {battery}%.")
+
+def alphastatus():
+    print('Aplha is offline...')
+
+
+if __name__ == "__main__":
+        alphastatus()
+        x=input('Enter password to make alpha online:')
+        if x=='ALPHA':
+            greets()
+            while True:
+                answer=commands().lower()
+                if 'time' in answer:
+                    strTime= datetime.datetime.now().strftime("%I:%M %p")
+                    print(strTime)
+                    speak(f"Boss, the time is {strTime}")
+
+                elif 'date' in answer:
+                    strDate = datetime.datetime.now().strftime("%d %B %Y")  
+                    print(strDate)
+                    speak(f"Boss, today's date is {strDate}")
+
+                elif 'day' in answer or 'what day' in answer:
+                    day = datetime.datetime.now().strftime("%A")
+                    speak(f"Today is {day}, Boss.")
+
+
+                elif 'open edge' in answer or 'open the edge' in answer or 'open chrome' in answer or 'open the chrome' in answer or 'open the browser' in answer or 'open browser' in answer:
+                    speak("Kicking off the browser application Boss..")
+                    os.startfile("C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe")
+
+                elif answer == 'close browser':
+                    close_browser()
+
+                elif 'play' in answer:
+                    answer=answer.replace('play','')
+                    speak(f'playing{answer} on you tube')
+                    pywhatkit.playonyt(answer)
+
+                elif answer == 'close youtube':
+                    close_youtube()
+
+                elif 'wikipedia' in answer:
+                    speak("Just a moment, Boss. I’m fetching the details...")
+                    try:
+                        answer = answer.replace("wikipedia", "")
+                        results = wikipedia.summary(answer, sentences=3)
+                        speak("According to Wikipedia...")
+                        print(results)
+                        speak(results)
+                    except:
+                        print("NO results found...")
+                        speak("No results found, Boss.")
+                elif 'system status'in answer:
+                    system_status()
+
+
+                elif 'type' in answer or 'write' in answer or 'note' in answer or 'open notepad'in answer:
+                    speak("Opening Notepad and ready to write, sir...")
+                    os.system("start notepad.exe")
+                    time.sleep(1.5)
+                    speak("Please tell me what to write sir")
+
+                    while True:
+                        writeInNotepad = commands().lower()
+
+                        if 'exit typing' in writeInNotepad or 'exit notepad' in writeInNotepad:
+                            speak("Do you want to save the note before closing?")
+                            save_choice = commands().lower()
+
+                            if 'yes save' in save_choice:
+                                speak("Please tell me the filename.")
+                                filename = commands().lower().replace(" ", "_") + ".txt"
+                                speak(f"Saving your note as {filename}")
+                                pyautogui.hotkey('ctrl', 's')
+                                time.sleep(1)
+                                pyautogui.write(filename)
+                                pyautogui.press('enter')
+                                time.sleep(1.5)
+                                pyautogui.hotkey('alt', 'f4')
+                                speak("Note saved and Notepad closed.")
+                                break
+
+                            elif "no" in save_choice:
+                                speak("Closing without saving, sir...")
+                                pyautogui.hotkey('alt', 'f4')
+                                time.sleep(0.5)
+                                pyautogui.press('right')
+                                pyautogui.press('enter')  
+                                speak("Notepad closed without saving.")
+                                break
+                            else:
+                                speak("I didn't catch that. Notepad will remain open.")
+
+                        elif 'create new page' in writeInNotepad or 'new page' in writeInNotepad:
+                            speak("Creating a new page, sir...")
+                            pyautogui.hotkey('ctrl', 'n')
+                        else:
+                            pyautogui.write(writeInNotepad)
+                            pyautogui.press('enter')
+                elif 'screenshot' in answer or 'take screenshot' in answer:
+                    speak("Capturing your screen now, Boss...")
+                    try:
+                        screenshot = pyautogui.screenshot()
+                        screenshot.show()  
+                        speak("Here’s your screenshot, Boss.")
+                        pyautogui.hotkey('alt','f4')
+                        time.sleep(0.5)
+                    except Exception as e:
+                        print(f"Screenshot failed: {e}")
+                        speak("Sorry Boss, I couldn't take the screenshot.")
+                elif 'alpha exit' in answer or 'exit' in answer:
+                    alpha_exit()
+                    break 
+        else:
+            print("\u274C you are not my bosss")
+                     
+
+
+
+
+
+
+            
+        
+        
+    
